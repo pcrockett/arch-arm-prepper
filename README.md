@@ -11,5 +11,5 @@ Once `fzf` is installed,
 
 Wait until the script finishes, and your microSD card should be ready to pop into the Raspberry Pi.
 
-[arch-arm]: https://archlinuxarm.org/platforms/armv8/broadcom/raspberry-pi-4
+[arch-arm]: https://archlinuxarm.org/platforms/armv8/broadcom/raspberry-pi-4#installation
 [fzf]: https://github.com/junegunn/fzf
