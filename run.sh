@@ -76,8 +76,6 @@ size=200MiB, type=c
 type=83
 "
 
-sync # Without this we seem to have a race condition
-
 echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 echo "!!  REFORMATTING DEVICE  !!"
 echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!"
@@ -89,12 +87,17 @@ echo "Press enter to continue or Ctrl+C to cancel..."
 read -r
 
 echo "${FORMAT_SCRIPT}" | sfdisk "${DEVICE_PATH}"
+sync
 
 mkfs.vfat "${DEVICE_PATH}1"
+sync
+
 mkdir boot
 mount "${DEVICE_PATH}1" boot
 
 mkfs.ext4 "${DEVICE_PATH}2"
+sync
+
 mkdir root
 mount "${DEVICE_PATH}2" root
 
@@ -155,14 +158,21 @@ fx6y8+A0kBiaAmcY01U/upYXeHs=
 -----END PGP PUBLIC KEY BLOCK-----
 "
 
+# Make a temporary gpg home dir and import the key
 mkdir "${GNUPGHOME}"
 echo "${ARCH_ARM_SIGNING_KEY}" | gpg --import
+
+# Give the key "ultimate" trust by navigating the gpg menu programmatically
+# Yes I know this sucks. But that's gpg, folks.
 echo -e "5\ny\n" \
     | gpg --command-fd 0 --edit-key "68B3537F39A313B3E574D06777193F152BDBE6A6" trust \
     &> /dev/null
+
 gpg --verify "${ARCHIVE_NAME}.sig"
 
-tar -xpf "${ARCHIVE_NAME}" -C root
+tar --extract --preserve-permissions \
+    --file "${ARCHIVE_NAME}" \
+    --directory root
 sync
 
 mv root/boot/* boot
@@ -171,4 +181,6 @@ sync
 echo "Done! You may boot your Raspberry Pi with the SD card now."
 echo "Default user:password is \`alarm:alarm\`"
 echo "Default root password is \`root\`"
-echo "Don't forget to change it!"
+echo
+echo "IMPORTANT! SSH is enabled! First order of business: CHANGE YOUR PASSWORDS!"
+echo
