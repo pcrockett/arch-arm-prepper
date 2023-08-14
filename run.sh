@@ -17,8 +17,7 @@ panic() {
 }
 
 if [ "$(id --user)" -ne 0 ]; then
-    echo "This script must be run as root."
-    exit 1
+    panic "This script must be run as root."
 fi
 
 WORKING_DIR="tmp"
