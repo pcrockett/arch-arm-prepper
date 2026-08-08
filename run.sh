@@ -9,15 +9,16 @@ set -Eeuo pipefail
 #
 # * fzf
 # * wget
+# * mkfs.vfat
 #
 
 panic() {
-    echo "${@}"
-    exit 1
+  echo "${@}"
+  exit 1
 }
 
 if [ "$(id --user)" -ne 0 ]; then
-    panic "This script must be run as root."
+  panic "This script must be run as root."
 fi
 
 WORKING_DIR="tmp"
@@ -26,45 +27,45 @@ export GNUPGHOME="gpghome"
 
 test ! -e "${WORKING_DIR}" || rmdir "${WORKING_DIR}"
 mkdir "${WORKING_DIR}"
-pushd "${WORKING_DIR}" &> /dev/null
+pushd "${WORKING_DIR}" &>/dev/null
 
 on_exit() {
-    if [ -d boot ]; then
-        umount boot
-        rmdir boot
-    fi
+  if [ -d boot ]; then
+    umount boot
+    rmdir boot
+  fi
 
-    if [ -d root ]; then
-        umount root
-        rmdir root
-    fi
+  if [ -d root ]; then
+    umount root
+    rmdir root
+  fi
 
-    if [ -d "${GNUPGHOME}" ]; then
-        rm -r "${GNUPGHOME}"
-    fi
+  if [ -d "${GNUPGHOME}" ]; then
+    rm -r "${GNUPGHOME}"
+  fi
 
-    rm -f "${ARCHIVE_NAME}"
-    rm -f "${ARCHIVE_NAME}.sig"
+  rm -f "${ARCHIVE_NAME}"
+  rm -f "${ARCHIVE_NAME}.sig"
 
-    popd &> /dev/null
-    rmdir "${WORKING_DIR}"
+  popd &>/dev/null
+  rmdir "${WORKING_DIR}"
 }
 trap 'on_exit' EXIT
 
 prompt_for_device() {
-    # Display a rich fuzzy search / menu for the user to select their SD card device,
-    # and output just the SD card device's PATH
+  # Display a rich fuzzy search / menu for the user to select their SD card device,
+  # and output just the SD card device's PATH
 
-    # Disable warning about using single-quotes
-    # shellcheck disable=SC2016
-    lsblk --list --nodeps --output PATH,SIZE \
-        | fzf \
-            --header-lines 1 \
-            --layout reverse \
-            --prompt "Select your SD card device: " \
-            --preview 'fdisk --list "$(echo {} | cut --fields 1 --delimiter " ")"' \
-            --preview-window down \
-        | cut --fields 1 --delimiter " "
+  # Disable warning about using single-quotes
+  # shellcheck disable=SC2016
+  lsblk --list --nodeps --output PATH,SIZE \
+    | fzf \
+      --header-lines 1 \
+      --layout reverse \
+      --prompt "Select your SD card device: " \
+      --preview 'fdisk --list "$(echo {} | cut --fields 1 --delimiter " ")"' \
+      --preview-window down \
+    | cut --fields 1 --delimiter " "
 }
 
 DEVICE_PATH="$(prompt_for_device)"
@@ -164,14 +165,14 @@ echo "${ARCH_ARM_SIGNING_KEY}" | gpg --import
 # Give the key "ultimate" trust by navigating the gpg menu programmatically
 # Yes I know this sucks. But that's gpg, folks.
 echo -e "5\ny\n" \
-    | gpg --command-fd 0 --edit-key "68B3537F39A313B3E574D06777193F152BDBE6A6" trust \
-    &> /dev/null
+  | gpg --command-fd 0 --edit-key "68B3537F39A313B3E574D06777193F152BDBE6A6" trust \
+    &>/dev/null
 
 gpg --verify "${ARCHIVE_NAME}.sig"
 
 tar --extract --preserve-permissions \
-    --file "${ARCHIVE_NAME}" \
-    --directory root
+  --file "${ARCHIVE_NAME}" \
+  --directory root
 sync
 
 mv root/boot/* boot
