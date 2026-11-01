@@ -2,5 +2,9 @@
 pre-commit = "latest"
 shellcheck = "latest"
 shfmt = "latest"
+uv = "latest"
 yamlfmt = "latest"
 yamllint = "latest"
+
+[settings]
+lockfile_platforms = ["linux-x64", "linux-x64-musl"]
